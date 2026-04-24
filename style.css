@@ -1,0 +1,370 @@
+/* ============================================================
+   LUMINARY — Random Quote Generator
+   style.css
+   ============================================================ */
+
+/* ── Custom properties ─────────────────────────────────────── */
+:root {
+  /* Palette — overridden per-quote via JS */
+  --hue: 220;
+  --bg-a: hsl(var(--hue), 60%, 14%);
+  --bg-b: hsl(calc(var(--hue) + 40), 55%, 22%);
+  --accent: hsl(calc(var(--hue) + 20), 80%, 72%);
+  --accent-dim: hsl(calc(var(--hue) + 20), 50%, 55%);
+
+  /* Glass card */
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: 0 32px 80px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0,0,0,0.2);
+  --glass-blur: 28px;
+
+  /* Typography */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'Jost', system-ui, sans-serif;
+
+  /* Easing */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Sizing */
+  --card-max: 720px;
+  --radius-card: 28px;
+  --radius-btn: 50px;
+}
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Body / full-screen stage ─────────────────────────────── */
+html, body {
+  height: 100%;
+  overflow: hidden; /* canvas fills entire viewport */
+}
+
+body {
+  font-family: var(--font-ui);
+  color: #fff;
+  /* Background is painted by the canvas; body stays transparent */
+  background: transparent;
+  transition: background 1s var(--ease-in-out);
+}
+
+/* ── Animated canvas backdrop ─────────────────────────────── */
+#bg-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  /* transition handled in canvas.js */
+}
+
+/* ── Grain texture overlay ─────────────────────────────────── */
+.grain {
+  position: fixed;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  animation: grain-shift 0.5s steps(1) infinite;
+}
+@keyframes grain-shift {
+  0%  { transform: translate(0,   0); }
+  20% { transform: translate(-3%, -4%); }
+  40% { transform: translate(-5%,  3%); }
+  60% { transform: translate(4%,  -2%); }
+  80% { transform: translate(-2%,  5%); }
+  100%{ transform: translate(3%,  -3%); }
+}
+
+/* ── Stage — centers the card ──────────────────────────────── */
+.stage {
+  position: relative;
+  z-index: 2;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+  gap: 1.75rem;
+}
+
+/* ── Eyebrow label ─────────────────────────────────────────── */
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  animation: fade-up 0.8s var(--ease-out-expo) both;
+}
+
+/* ── Glass card ────────────────────────────────────────────── */
+.card {
+  position: relative;
+  width: 100%;
+  max-width: var(--card-max);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-shadow);
+  padding: 3.5rem 3.5rem 2.75rem;
+  overflow: hidden;
+  animation: fade-up 0.9s var(--ease-out-expo) 0.1s both;
+
+  /* Subtle inner top highlight */
+  background-image: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.08) 0%,
+    transparent 60%
+  );
+}
+
+/* Shimmering edge highlight on hover */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.12) 0%,
+    transparent 50%,
+    rgba(255,255,255,0.04) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.card:hover::before { opacity: 1; }
+
+/* ── Decorative open-quote glyph ───────────────────────────── */
+.deco-quote {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 12vw, 9rem);
+  line-height: 0.6;
+  color: var(--accent);
+  opacity: 0.25;
+  margin-bottom: 1rem;
+  transition: color 0.8s var(--ease-in-out), opacity 0.8s;
+  user-select: none;
+}
+.card:hover .deco-quote { opacity: 0.4; }
+
+/* ── Quote text ────────────────────────────────────────────── */
+.quote-text {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3.2vw, 2rem);
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.93);
+  quotes: none; /* we use our own deco glyph */
+  transition: opacity 0.3s, transform 0.3s;
+  min-height: 80px; /* prevent layout shift during load */
+}
+
+/* Quote change animation — triggered by JS */
+.quote-text.fade-out,
+.quote-author.fade-out {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.quote-text.fade-in,
+.quote-author.fade-in {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.45s var(--ease-out-expo), transform 0.45s var(--ease-out-expo);
+}
+
+/* ── Author ─────────────────────────────────────────────────── */
+.quote-author {
+  margin-top: 2rem;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  transition: color 0.8s var(--ease-in-out), opacity 0.3s, transform 0.3s;
+
+  /* Em dash prefix */
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+.quote-author::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--accent);
+  opacity: 0.6;
+  transition: background 0.8s;
+  flex-shrink: 0;
+}
+
+/* ── Source (book/work) ─────────────────────────────────────── */
+.quote-source {
+  display: block;
+  margin-top: 0.4rem;
+  padding-left: calc(28px + 0.6em);
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.35);
+  font-style: italic;
+  font-family: var(--font-display);
+  transition: opacity 0.3s;
+}
+.quote-source:empty { display: none; }
+
+/* ── Spinner ─────────────────────────────────────────────────── */
+.spinner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.25);
+  border-radius: inherit;
+  backdrop-filter: blur(4px);
+}
+.spinner[hidden] { display: none; }
+
+.spinner-ring {
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Action bar ─────────────────────────────────────────────── */
+.action-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: fade-up 1s var(--ease-out-expo) 0.25s both;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 0.75rem 1.6rem;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s,
+    transform 0.18s var(--ease-out-expo),
+    box-shadow 0.2s,
+    opacity 0.2s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.95) !important; }
+
+/* Primary — solid accent */
+.btn-primary {
+  background: var(--accent);
+  color: rgba(0,0,0,0.8);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+  transition: background 0.8s var(--ease-in-out), box-shadow 0.2s, transform 0.18s var(--ease-out-expo);
+}
+.btn-primary:hover {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.35);
+}
+
+/* Ghost — glass outline */
+.btn-ghost {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.8);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(8px);
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  transform: translateY(-2px);
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* Icon inside button */
+.btn-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* Copy "Copied!" feedback */
+.btn-ghost.copied {
+  background: rgba(100, 220, 140, 0.18);
+  border-color: rgba(100, 220, 140, 0.4);
+  color: #90f0aa;
+}
+
+/* ── Keyboard hint ───────────────────────────────────────────── */
+.kbd-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.28);
+  letter-spacing: 0.04em;
+  animation: fade-up 1s var(--ease-out-expo) 0.4s both;
+}
+kbd {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.5);
+  vertical-align: baseline;
+  letter-spacing: 0;
+}
+
+/* ── Page-load animation ─────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .card { padding: 2.5rem 2rem 2.25rem; }
+  .deco-quote { font-size: 4.5rem; }
+  .action-bar { gap: 0.6rem; }
+  .btn { padding: 0.7rem 1.25rem; font-size: 0.78rem; }
+}
+
+@media (max-width: 380px) {
+  .card { padding: 2rem 1.5rem 1.75rem; border-radius: 20px; }
+  .btn-ghost .btn-icon + * { display: none; } /* icon-only on very small screens */
+}
+
+/* ── Reduced motion ──────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+}
