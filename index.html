@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luminary — Daily Quotes</title>
+
+  <!-- Fonts: Cormorant Garamond (display) + Jost (UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Jost:wght@300;400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ░░ Animated background canvas ░░ -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- ░░ Grain overlay for tactile feel ░░ -->
+  <div class="grain" aria-hidden="true"></div>
+
+  <!-- ░░ Main app shell ░░ -->
+  <main class="stage">
+
+    <!-- Eyebrow label -->
+    <p class="eyebrow" aria-label="App name">Luminary</p>
+
+    <!-- ── Quote card ── -->
+    <article class="card" id="quote-card" aria-live="polite" aria-atomic="true">
+
+      <!-- Large decorative open-quote mark -->
+      <span class="deco-quote" aria-hidden="true">&ldquo;</span>
+
+      <!-- Quote text -->
+      <blockquote class="quote-text" id="quote-text">
+        <!-- Populated by JS -->
+      </blockquote>
+
+      <!-- Author line -->
+      <footer class="quote-author" id="quote-author">
+        <!-- Populated by JS -->
+      </footer>
+
+      <!-- Source tag (optional, shown when available) -->
+      <span class="quote-source" id="quote-source"></span>
+
+      <!-- Loading spinner (hidden by default) -->
+      <div class="spinner" id="spinner" aria-label="Loading quote" role="status" hidden>
+        <div class="spinner-ring"></div>
+      </div>
+
+    </article>
+
+    <!-- ── Action bar ── -->
+    <div class="action-bar">
+
+      <!-- New Quote -->
+      <button class="btn btn-primary" id="btn-new" aria-label="Generate new quote">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        New Quote
+      </button>
+
+      <!-- Tweet / Share -->
+      <button class="btn btn-ghost" id="btn-tweet" aria-label="Share quote on Twitter / X">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+        </svg>
+        Share
+      </button>
+
+      <!-- Copy to clipboard -->
+      <button class="btn btn-ghost" id="btn-copy" aria-label="Copy quote to clipboard">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+        <span id="copy-label">Copy</span>
+      </button>
+
+    </div>
+
+    <!-- Keyboard hint -->
+    <p class="kbd-hint">
+      Press <kbd>Space</kbd> for a new quote &nbsp;·&nbsp; <kbd>C</kbd> to copy
+    </p>
+
+  </main>
+
+  <script src="js/quotes.js"></script>
+  <script src="js/canvas.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
